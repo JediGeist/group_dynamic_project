@@ -25,6 +25,7 @@ class ExampleApp(QtWidgets.QMainWindow, design.Ui_MainWindow):
         self.fullScreen.setEnabled(False)
         self.playBtn.setEnabled(False)
 
+        #shortcut для того, чтобы свернуть видео
         self.shortcut = QShortcut(QKeySequence("Esc"), self)
         self.shortcut.activated.connect(self.exitFullScreen)
 

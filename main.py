@@ -58,6 +58,7 @@ class ExampleApp(QtWidgets.QMainWindow, design.Ui_MainWindow):
                    self.fullScreen.setEnabled(True)
                    self.playBtn.setEnabled(True)
                    self.playBtn.clicked.connect(self.play_video)
+        #Активируем кнопку фулл скрин
         self.fullScreen.clicked.connect(self.full_screen)
 
     #Функция для запуска видео

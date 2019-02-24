@@ -12,7 +12,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(820, 565)
+        MainWindow.resize(1420, 565)
         self.centralWidget = QtWidgets.QWidget(MainWindow)
         self.centralWidget.setObjectName("centralWidget")
         self.horizontalLayoutWidget = QtWidgets.QWidget(self.centralWidget)
@@ -25,10 +25,10 @@ class Ui_MainWindow(object):
         self.btnBrowse = QtWidgets.QPushButton(self.horizontalLayoutWidget)
         self.btnBrowse.setObjectName("btnBrowse")
         self.horizontalLayout.addWidget(self.btnBrowse)
-        self.pushButton = QtWidgets.QPushButton(self.horizontalLayoutWidget)
-        self.pushButton.setEnabled(True)
-        self.pushButton.setObjectName("pushButton")
-        self.horizontalLayout.addWidget(self.pushButton)
+        self.createGraph = QtWidgets.QPushButton(self.horizontalLayoutWidget)
+        self.createGraph.setEnabled(True)
+        self.createGraph.setObjectName("createGraph")
+        self.horizontalLayout.addWidget(self.createGraph)
         self.videoWidget = QVideoWidget(self.centralWidget)
         self.videoWidget.setGeometry(QtCore.QRect(9, 9, 800, 480))
         self.videoWidget.setObjectName("videoWidget")
@@ -53,6 +53,15 @@ class Ui_MainWindow(object):
         self.fullScreen = QtWidgets.QPushButton(self.centralWidget)
         self.fullScreen.setGeometry(QtCore.QRect(690, 490, 61, 31))
         self.fullScreen.setObjectName("fullScreen")
+        self.plot_widget = QtWidgets.QWidget(self.centralWidget)
+        self.plot_widget.setGeometry(QtCore.QRect(819, 9, 591, 481))
+        self.plot_widget.setObjectName("plot_widget")
+        self.label = QtWidgets.QLabel(self.centralWidget)
+        self.label.setGeometry(QtCore.QRect(950, 510, 41, 21))
+        self.label.setObjectName("label")
+        self.label_2 = QtWidgets.QLabel(self.centralWidget)
+        self.label_2.setGeometry(QtCore.QRect(998, 505, 261, 31))
+        self.label_2.setObjectName("label_2")
         MainWindow.setCentralWidget(self.centralWidget)
 
         self.retranslateUi(MainWindow)
@@ -61,10 +70,12 @@ class Ui_MainWindow(object):
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
-        self.btnBrowse.setText(_translate("MainWindow", "Выбрать видео"))
-        self.pushButton.setText(_translate("MainWindow", "PushButton"))
+        self.btnBrowse.setText(_translate("MainWindow", "choose video"))
+        self.createGraph.setText(_translate("MainWindow", "create graph"))
         self.playBtn.setText(_translate("MainWindow", "Ply"))
         self.fullScreen.setText(_translate("MainWindow", "full"))
+        self.label.setText(_translate("MainWindow", "Name:"))
+        self.label_2.setText(_translate("MainWindow", "<html><head/><body><p><br/></p></body></html>"))
 
 
 from PyQt5.QtMultimediaWidgets import QVideoWidget

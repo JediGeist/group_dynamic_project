@@ -41,15 +41,22 @@ class ExampleApp(QtWidgets.QMainWindow, design.Ui_MainWindow):
         self.scrolLayout.addWidget(self.positionSlider)
         #Слайдер конец
 
+        self.shortcut = QShortcut(QKeySequence("q"), self)
+        self.shortcut.activated.connect(self.exitFullScreen)
+
         #Отрисовка графика начало
         self.paintGrph = QVBoxLayout(self.plot_widget)
+
+        self.initial()
 
         #Выполняем функцию для открытия видео
         self.btnBrowse.clicked.connect(self.open_video)
 
-    #Функция для открытия видео
-    def open_video(self):
-        self.Video_Player = QtMultimediaWidgets.QVideoWidget(self.centralWidget)
+        self.OK.clicked.connect(self.oK_click)
+
+    def initial(self):
+        #Создаем холст для воспроизведения видео
+        self.Video_Player = QtMultimediaWidgets.QVideoWidget(self.videoWidget)
         self.Video_Player.setObjectName("mediaPlayer")
         self.horizontalLayout_3.addWidget(self.Video_Player)
         self.Video_Player.show()
@@ -57,14 +64,27 @@ class ExampleApp(QtWidgets.QMainWindow, design.Ui_MainWindow):
         self.mediaPlayer.stateChanged.connect(self.mediaStateChanged)
         self.mediaPlayer.positionChanged.connect(self.positionChanged)
         self.mediaPlayer.durationChanged.connect(self.durationChanged)
+
+    #Функция для открытия видео
+    def open_video(self):
+
+        self.lineEdit.setReadOnly(False)
+        self.fullScreen.setEnabled(False)
+        self.createGraph.setEnabled(False)
+        #Чистим поле для отрисовки графика
+        for i in reversed(range(self.paintGrph.count())):
+            self.paintGrph.itemAt(i).widget().setParent(None)
+
         fileName, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Choose video")
         #Если выбран правильный формат, то открываем видео
         if fileName != '':
+                   self.mediaPlayer.setParent(None)
                    self.mediaPlayer.setMedia(QMediaContent(QUrl.fromLocalFile(fileName)))
                    self.mediaPlayer.setVideoOutput(self.Video_Player)
                    self.fullScreen.setEnabled(True)
                    self.playBtn.setEnabled(True)
-                   self.label_2.setText(os.path.basename(fileName))
+                   self.lineEdit.clear()
+                   self.lineEdit.setText(os.path.basename(fileName))
                    self.playBtn.clicked.connect(self.play_video)
         self.fullScreen.clicked.connect(self.full_screen)
         self.createGraph.clicked.connect(self.read_data)
@@ -72,14 +92,18 @@ class ExampleApp(QtWidgets.QMainWindow, design.Ui_MainWindow):
     #Функция для запуска видео
     def play_video(self):
         self.mediaPlayer.play()
+        self.playBtn.setEnabled(False)
 
     #Функция для выхода из полноэкранного режима
     def exitFullScreen(self):
         self.Video_Player.setFullScreen(False)
+        self.Video_Player.setParent(None)
+        self.initial()
+
 
     #Функция для открытия полного экрана
     def full_screen(self):
-        self.Video_Player.setFullScreen(True)
+       self.Video_Player.setFullScreen(True)
 
     #Функции для работы со скроллбаром начало
     def mediaStateChanged(self, state):
@@ -96,10 +120,13 @@ class ExampleApp(QtWidgets.QMainWindow, design.Ui_MainWindow):
 
     #Функция для чтения данных
     def read_data(self):
-        path_to_data = "/Users/antonsavacenko/untitled/azart.pickle"
-        with open(path_to_data, "rb") as f:
-            data = pickle.load(f)
-        self.print_graph(data)
+        fileName, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Choose file")
+        #Если выбран правильный формат, то открываем файл
+        if fileName != '':
+            path_to_data = fileName
+            with open(path_to_data, "rb") as f:
+                data = pickle.load(f)
+            self.print_graph(data)
 
     #Функция для отрисовки графика
     def print_graph(self, data):
@@ -116,11 +143,16 @@ class ExampleApp(QtWidgets.QMainWindow, design.Ui_MainWindow):
 
         plt.plot(xs, value)
 
+        #Чистим поле для отрисовки графика
+        for i in reversed(range(self.paintGrph.count())):
+            self.paintGrph.itemAt(i).widget().setParent(None)
         self.canavas = MyMplCanvas(fig)
         self.paintGrph.addWidget(self.canavas)
         self.toolbar = NavigationToolbar(self.canavas, self)
         self.paintGrph.addWidget(self.toolbar)
 
+    def oK_click(self):
+        self.lineEdit.setReadOnly(True)
 
 def main():
     app = QtWidgets.QApplication(sys.argv)  # Новый экземпляр QApplication

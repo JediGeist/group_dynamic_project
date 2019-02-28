@@ -59,9 +59,12 @@ class Ui_MainWindow(object):
         self.label = QtWidgets.QLabel(self.centralWidget)
         self.label.setGeometry(QtCore.QRect(950, 510, 41, 21))
         self.label.setObjectName("label")
-        self.label_2 = QtWidgets.QLabel(self.centralWidget)
-        self.label_2.setGeometry(QtCore.QRect(998, 505, 261, 31))
-        self.label_2.setObjectName("label_2")
+        self.lineEdit = QtWidgets.QLineEdit(self.centralWidget)
+        self.lineEdit.setGeometry(QtCore.QRect(1000, 510, 351, 21))
+        self.lineEdit.setObjectName("lineEdit")
+        self.OK = QtWidgets.QPushButton(self.centralWidget)
+        self.OK.setGeometry(QtCore.QRect(1360, 500, 51, 41))
+        self.OK.setObjectName("OK")
         MainWindow.setCentralWidget(self.centralWidget)
 
         self.retranslateUi(MainWindow)
@@ -75,7 +78,7 @@ class Ui_MainWindow(object):
         self.playBtn.setText(_translate("MainWindow", "Ply"))
         self.fullScreen.setText(_translate("MainWindow", "full"))
         self.label.setText(_translate("MainWindow", "Name:"))
-        self.label_2.setText(_translate("MainWindow", "<html><head/><body><p><br/></p></body></html>"))
+        self.OK.setText(_translate("MainWindow", "Ok"))
 
 
 from PyQt5.QtMultimediaWidgets import QVideoWidget

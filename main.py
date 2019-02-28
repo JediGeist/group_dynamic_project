@@ -18,6 +18,7 @@ from PyQt5.QtWidgets import QMainWindow,QWidget, QPushButton, QAction
 from PyQt5.QtGui import QIcon, QKeySequence
 from mplForWidget import MyMplCanvas
 from matplotlib.backends.backend_qt4 import NavigationToolbar2QT as NavigationToolbar
+from reader import eegSmtReader
 
 import design  # Это наш конвертированный файл дизайна
 
@@ -67,7 +68,6 @@ class ExampleApp(QtWidgets.QMainWindow, design.Ui_MainWindow):
 
     #Функция для открытия видео
     def open_video(self):
-
         self.lineEdit.setReadOnly(False)
         self.fullScreen.setEnabled(False)
         self.createGraph.setEnabled(False)
@@ -93,6 +93,10 @@ class ExampleApp(QtWidgets.QMainWindow, design.Ui_MainWindow):
     def play_video(self):
         self.mediaPlayer.play()
         self.playBtn.setEnabled(False)
+        t = eegReader('/dev/ttytUSB0')
+        data = t.read_data(lambda : state == QMediaPlayer.StoppedState)
+        path = "/Users/antonsavacenko/untitled/"
+        self.write(data, path)
 
     #Функция для выхода из полноэкранного режима
     def exitFullScreen(self):
@@ -151,8 +155,13 @@ class ExampleApp(QtWidgets.QMainWindow, design.Ui_MainWindow):
         self.toolbar = NavigationToolbar(self.canavas, self)
         self.paintGrph.addWidget(self.toolbar)
 
+    #Функция для сохранения названия файла
     def oK_click(self):
         self.lineEdit.setReadOnly(True)
+    #Функция для записи в файл
+    def write(data, path)
+        with open(path, 'wb') as f:
+            pickle.dump(data, f)
 
 def main():
     app = QtWidgets.QApplication(sys.argv)  # Новый экземпляр QApplication

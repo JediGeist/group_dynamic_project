@@ -8,37 +8,42 @@ import os
 class eegSmtReader:
     def __init__(self, port_name):
         self.port_name = port_name
+        self.read = True
         
-    def read_data(self, predicat):
+    def read_data(self):
         self.cer = serial.Serial(self.port_name, baudrate=57600)
         
         data = b''
         first = True
-        while predicat:
+        print("start")
+        while self.read:
             if first:
                 t = self.cer.read_all()
                 first = False
                 continue
             data += self.cer.read_all()
-            
             time.sleep(0.05)
-            
+            print('tic')
+
         data = data[2000:]
-        
-        
+        print("stop")
         parse_data = [[] for _ in range(17)]
         
         for ind, data_byte in enumerate(data):
             parse_data[ind % 17].append(data_byte)
 
 
-        sep_parse_data = [row[:-1] for row in parse_data]
-        
+        lens = []
+        for row in parse_data:
+            lens.append(len(row))
+
+        sep_parse_data = [row[:min(lens)] for row in parse_data]
+
         self.sep_parse_data = sep_parse_data
         self.cer.close()
         
         res = np.array(sep_parse_data)
-        
+
         for ind, row in enumerate(res):
             
             if (row[:100] == 165.0).sum() == 100:
@@ -59,6 +64,6 @@ class eegSmtReader:
         
         np_res_arr = np.array(res_arr)
         
-        return np_res_arr[0] + np_res_arr[1]
+        return (np_res_arr[0] + np_res_arr[1]) / 1023
 
 

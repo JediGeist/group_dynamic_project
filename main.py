@@ -9,7 +9,7 @@ import matplotlib.gridspec as gridspec
 from PyQt5 import QtWidgets
 from PyQt5 import QtMultimediaWidgets
 from PyQt5 import QtMultimedia
-from PyQt5.QtCore import QDir, Qt, QUrl, QTimer
+from PyQt5.QtCore import QDir, Qt, QUrl, QTimer, QThread
 from PyQt5.QtMultimedia import QMediaContent, QMediaPlayer
 from PyQt5.QtMultimediaWidgets import QVideoWidget
 from PyQt5.QtWidgets import (QApplication, QFileDialog, QHBoxLayout, QLabel,
@@ -19,8 +19,16 @@ from PyQt5.QtGui import QIcon, QKeySequence
 from mplForWidget import MyMplCanvas
 from matplotlib.backends.backend_qt4 import NavigationToolbar2QT as NavigationToolbar
 from reader import eegSmtReader
+import feature_extraction as fexec
+import model
+import time
+from multiprocessing import Process
+
+
 
 import design  # Это наш конвертированный файл дизайна
+
+t = eegSmtReader('/dev/tty.usbserial-AL027NKE')
 
 class ExampleApp(QtWidgets.QMainWindow, design.Ui_MainWindow):
     def __init__(self):
@@ -45,6 +53,8 @@ class ExampleApp(QtWidgets.QMainWindow, design.Ui_MainWindow):
         self.shortcut = QShortcut(QKeySequence("q"), self)
         self.shortcut.activated.connect(self.exitFullScreen)
 
+
+
         #Отрисовка графика начало
         self.paintGrph = QVBoxLayout(self.plot_widget)
 
@@ -62,6 +72,7 @@ class ExampleApp(QtWidgets.QMainWindow, design.Ui_MainWindow):
         self.horizontalLayout_3.addWidget(self.Video_Player)
         self.Video_Player.show()
         self.mediaPlayer = QtMultimedia.QMediaPlayer()
+        self.thread = ThreadForRead(self.mediaPlayer)
         self.mediaPlayer.stateChanged.connect(self.mediaStateChanged)
         self.mediaPlayer.positionChanged.connect(self.positionChanged)
         self.mediaPlayer.durationChanged.connect(self.durationChanged)
@@ -70,11 +81,9 @@ class ExampleApp(QtWidgets.QMainWindow, design.Ui_MainWindow):
     def open_video(self):
         self.lineEdit.setReadOnly(False)
         self.fullScreen.setEnabled(False)
-        self.createGraph.setEnabled(False)
         #Чистим поле для отрисовки графика
         for i in reversed(range(self.paintGrph.count())):
             self.paintGrph.itemAt(i).widget().setParent(None)
-
         fileName, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Choose video")
         #Если выбран правильный формат, то открываем видео
         if fileName != '':
@@ -89,14 +98,33 @@ class ExampleApp(QtWidgets.QMainWindow, design.Ui_MainWindow):
         self.fullScreen.clicked.connect(self.full_screen)
         self.createGraph.clicked.connect(self.read_data)
 
+
+
     #Функция для запуска видео
     def play_video(self):
+
+
         self.mediaPlayer.play()
-        self.playBtn.setEnabled(False)
-        t = eegReader('/dev/ttytUSB0')
-        data = t.read_data(lambda : state == QMediaPlayer.StoppedState)
-        path = "/Users/antonsavacenko/untitled/"
-        self.write(data, path)
+        self.thread.start()
+        print("end")
+
+
+
+    def workWithData(self):
+        t = eegSmtReader('/dev/tty.usbserial-AL027NKE')
+        print("start read...")
+        data = t.read_data(100000)
+        time.sleep(0)
+        print("end read...")
+        dataFeature = fexec.get_fuature(data)
+        path = "/Users/antonsavacenko/untitled/test.eegpic"
+        self.write(dataFeature, path)
+
+        md = model.get_model()
+        pred = md.predict(dataFeature)
+        path = "/Users/antonsavacenko/untitled/testRes.eegpic"
+        self.write(pred, path)
+
 
     #Функция для выхода из полноэкранного режима
     def exitFullScreen(self):
@@ -109,11 +137,15 @@ class ExampleApp(QtWidgets.QMainWindow, design.Ui_MainWindow):
     def full_screen(self):
        self.Video_Player.setFullScreen(True)
 
+
+
     #Функции для работы со скроллбаром начало
     def mediaStateChanged(self, state):
         if state == QMediaPlayer.StoppedState:
+            t.read = False
             self.exitFullScreen()
             self.createGraph.setEnabled(True)
+
     def setPosition(self, position):
         self.mediaPlayer.setPosition(position)
     def positionChanged(self, position):
@@ -134,15 +166,15 @@ class ExampleApp(QtWidgets.QMainWindow, design.Ui_MainWindow):
 
     #Функция для отрисовки графика
     def print_graph(self, data):
-
+        print(data)
         fig, axes = plt.subplots()
 
         plt.axis([0,70, -0.1, 1.1])
 
         xs = []
         value = []
-        for i in range(len(data[0])):
-            value += [data[0][i]]
+        for i in range(len(data)):
+            value += [data[i]]
             xs += [i]
 
         plt.plot(xs, value)
@@ -158,10 +190,32 @@ class ExampleApp(QtWidgets.QMainWindow, design.Ui_MainWindow):
     #Функция для сохранения названия файла
     def oK_click(self):
         self.lineEdit.setReadOnly(True)
-    #Функция для записи в файл
-    def write(data, path)
-        with open(path, 'wb') as f:
+
+def write(data, path):
+    with open(path, 'wb') as f:
+        pickle.dump(data, f)
+
+class ThreadForRead(QThread):
+    def __init__(self, mediaPlayer):
+        super().__init__()
+        self.mediaPlayer = mediaPlayer
+
+
+    def run(self):
+        print("start read...")
+        data = t.read_data()
+        time.sleep(0)
+        with open("/Users/antonsavacenko/untitled/data_test.eegpic", 'wb') as f:
             pickle.dump(data, f)
+        print("end read...")
+        dataFeature = fexec.get_fuature(data)
+        path = "/Users/antonsavacenko/untitled/test.eegpic"
+        write(dataFeature, path)
+
+        md = model.get_model()
+        pred = md.predict(dataFeature)
+        path = "/Users/antonsavacenko/untitled/testRes.eegpic"
+        write(pred, path)
 
 def main():
     app = QtWidgets.QApplication(sys.argv)  # Новый экземпляр QApplication

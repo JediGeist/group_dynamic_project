@@ -1,5 +1,5 @@
-import sys  # sys нужен для передачи argv в QApplication
-import os  # Отсюда нам понадобятся методы для отображения содержимого директорий
+import sys  # 
+import os  # 
 import pickle
 import matplotlib.pyplot as plt
 import numpy as np
@@ -26,47 +26,47 @@ from multiprocessing import Process
 
 
 
-import design  # Это наш конвертированный файл дизайна
+import design  # 
 
-t = eegSmtReader('/dev/tty.usbserial-AL027NKE')
+t = eegSmtReader('/dev/ttyUSB0')
 
 class ExampleApp(QtWidgets.QMainWindow, design.Ui_MainWindow):
     def __init__(self):
-        # Это здесь нужно для доступа к переменным, методам
-        # и т.д. в файле design.py
+        # 
+        # 
         super().__init__()
-        self.setupUi(self)  # Это нужно для инициализации нашего дизайна
+        self.setupUi(self)  # 
 
-        #Кнопки для проигрывания весь экран и запуска делаем неактивными
+        #
         self.fullScreen.setEnabled(False)
         self.playBtn.setEnabled(False)
         self.createGraph.setEnabled(False)
 
-        #Слайдер начало
+        #
         self.positionSlider = QSlider(Qt.Horizontal)
         self.positionSlider.setRange(0, 0)
         self.positionSlider.sliderMoved.connect(self.setPosition)
         self.scrolLayout.setContentsMargins(0, 0, 0, 0)
         self.scrolLayout.addWidget(self.positionSlider)
-        #Слайдер конец
+        #
 
         self.shortcut = QShortcut(QKeySequence("q"), self)
         self.shortcut.activated.connect(self.exitFullScreen)
 
 
 
-        #Отрисовка графика начало
+        #
         self.paintGrph = QVBoxLayout(self.plot_widget)
 
         self.initial()
 
-        #Выполняем функцию для открытия видео
+        #
         self.btnBrowse.clicked.connect(self.open_video)
 
         self.OK.clicked.connect(self.oK_click)
 
     def initial(self):
-        #Создаем холст для воспроизведения видео
+        #
         self.Video_Player = QtMultimediaWidgets.QVideoWidget(self.videoWidget)
         self.Video_Player.setObjectName("mediaPlayer")
         self.horizontalLayout_3.addWidget(self.Video_Player)
@@ -77,15 +77,15 @@ class ExampleApp(QtWidgets.QMainWindow, design.Ui_MainWindow):
         self.mediaPlayer.positionChanged.connect(self.positionChanged)
         self.mediaPlayer.durationChanged.connect(self.durationChanged)
 
-    #Функция для открытия видео
+    #
     def open_video(self):
         self.lineEdit.setReadOnly(False)
         self.fullScreen.setEnabled(False)
-        #Чистим поле для отрисовки графика
+        #
         for i in reversed(range(self.paintGrph.count())):
             self.paintGrph.itemAt(i).widget().setParent(None)
         fileName, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Choose video")
-        #Если выбран правильный формат, то открываем видео
+        #
         if fileName != '':
                    self.mediaPlayer.setParent(None)
                    self.mediaPlayer.setMedia(QMediaContent(QUrl.fromLocalFile(fileName)))
@@ -100,7 +100,7 @@ class ExampleApp(QtWidgets.QMainWindow, design.Ui_MainWindow):
 
 
 
-    #Функция для запуска видео
+    #
     def play_video(self):
 
 
@@ -111,7 +111,7 @@ class ExampleApp(QtWidgets.QMainWindow, design.Ui_MainWindow):
 
 
     def workWithData(self):
-        t = eegSmtReader('/dev/tty.usbserial-AL027NKE')
+        #t = eegSmtReader('/dev/ttyUSB0')
         print("start read...")
         data = t.read_data(100000)
         time.sleep(0)
@@ -126,20 +126,20 @@ class ExampleApp(QtWidgets.QMainWindow, design.Ui_MainWindow):
         self.write(pred, path)
 
 
-    #Функция для выхода из полноэкранного режима
+    #
     def exitFullScreen(self):
         self.Video_Player.setFullScreen(False)
         self.Video_Player.setParent(None)
         self.initial()
 
 
-    #Функция для открытия полного экрана
+    #
     def full_screen(self):
        self.Video_Player.setFullScreen(True)
 
 
 
-    #Функции для работы со скроллбаром начало
+    #
     def mediaStateChanged(self, state):
         if state == QMediaPlayer.StoppedState:
             t.read = False
@@ -152,19 +152,19 @@ class ExampleApp(QtWidgets.QMainWindow, design.Ui_MainWindow):
         self.positionSlider.setValue(position)
     def durationChanged(self, duration):
         self.positionSlider.setRange(0, duration)
-    #Конец
+    #
 
-    #Функция для чтения данных
+    #
     def read_data(self):
         fileName, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Choose file")
-        #Если выбран правильный формат, то открываем файл
+        #
         if fileName != '':
             path_to_data = fileName
             with open(path_to_data, "rb") as f:
                 data = pickle.load(f)
             self.print_graph(data)
 
-    #Функция для отрисовки графика
+    #
     def print_graph(self, data):
         print(data)
         fig, axes = plt.subplots()
@@ -179,7 +179,7 @@ class ExampleApp(QtWidgets.QMainWindow, design.Ui_MainWindow):
 
         plt.plot(xs, value)
 
-        #Чистим поле для отрисовки графика
+        #
         for i in reversed(range(self.paintGrph.count())):
             self.paintGrph.itemAt(i).widget().setParent(None)
         self.canavas = MyMplCanvas(fig)
@@ -187,7 +187,7 @@ class ExampleApp(QtWidgets.QMainWindow, design.Ui_MainWindow):
         self.toolbar = NavigationToolbar(self.canavas, self)
         self.paintGrph.addWidget(self.toolbar)
 
-    #Функция для сохранения названия файла
+    #
     def oK_click(self):
         self.lineEdit.setReadOnly(True)
 
@@ -217,11 +217,11 @@ class ThreadForRead(QThread):
         path = "/Users/antonsavacenko/untitled/testRes.eegpic"
         write(pred, path)
 
-def main():
-    app = QtWidgets.QApplication(sys.argv)  # Новый экземпляр QApplication
-    window = ExampleApp()  # Создаём объект класса ExampleApp
-    window.show()  # Показываем окно
-    app.exec_()  # и запускаем приложение
+def main(): 
+    app = QtWidgets.QApplication(sys.argv)  #
+    window = ExampleApp()  #
+    window.show()  #
+    app.exec_()  #
 
-if __name__ == '__main__':  # Если мы запускаем файл напрямую, а не импортируем
-    main()  # то запускаем функцию main()
+if __name__ == '__main__':  #
+    main()  #

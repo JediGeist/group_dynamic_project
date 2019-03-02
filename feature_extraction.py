@@ -21,7 +21,7 @@ def create_table( len_window = 100, len_min = 100):
     return df
 
 
-def get_fuature(data, len_window = 100, len_min = 100):
+def get_feature(data, len_window = 100, len_min = 100):
     data_res = data
 
     df = create_table(len_window=len_window, len_min=len_min)
@@ -51,9 +51,28 @@ def getFeatures(data):
     #print(alpha)
     return alpha.mean() if len(alpha) > 0 else 0, betta.mean() if len(betta) > 0 else 0
 
-def createDF(data, is_image, name, len_window = 100, len_min = 100, df = None):
+# def createDF(data, is_image, name, len_window = 100, len_min = 100, df = None):
 
-    for i in range(0, len(data), len_window):
+#     for i in range(0, len(data), len_window):
+#         alpha_arr = []
+#         betta_arr = []
+#         for j in range(i, i + len_window):
+#             cur_alpha_mean, cur_betta_mean = getFeatures(data[j:min(len(data), j + len_min)])
+#             #alpha_arr = np.append(alpha_arr, str(cur_alpha_mean))
+#             #alpha_arr = np.append(alpha_arr, str(cur_alpha_mean))
+#             alpha_arr.append(cur_alpha_mean)
+#             betta_arr.append(cur_betta_mean)
+#         new_str = alpha_arr + betta_arr
+#         new_str.append(is_image)
+#         new_str.append(name)
+#         df.loc[len(df)] = new_str
+
+#     df = df.fillna(0)
+#     return df
+
+def createDF(data, is_image, name, len_window = 100, len_min = 100, df = None):
+   
+    for i in range(0, len(data) - len_min, len_min):
         alpha_arr = []
         betta_arr = []
         for j in range(i, i + len_window):
@@ -65,8 +84,8 @@ def createDF(data, is_image, name, len_window = 100, len_min = 100, df = None):
         new_str = alpha_arr + betta_arr
         new_str.append(is_image)
         new_str.append(name)
+        print(len(new_str), df.shape)
         df.loc[len(df)] = new_str
 
     df = df.fillna(0)
     return df
-

@@ -7,6 +7,7 @@ import matplotlib.mlab as mlab
 import matplotlib.gridspec as gridspec
 
 from PyQt5 import QtWidgets
+from PyQt5 import QtCore
 from PyQt5 import QtMultimediaWidgets
 from PyQt5 import QtMultimedia
 from PyQt5.QtCore import QDir, Qt, QUrl, QTimer, QThread
@@ -68,8 +69,10 @@ class ExampleApp(QtWidgets.QMainWindow, design.Ui_MainWindow):
 
     def initial(self):
         #
-        self.Video_Player = QtMultimediaWidgets.QVideoWidget(self.videoWidget)
+        self.Video_Player = QVideoWidgetExit(self.videoWidget)
+
         self.Video_Player.setObjectName("mediaPlayer")
+
         self.horizontalLayout_3.addWidget(self.Video_Player)
         self.Video_Player.show()
         self.mediaPlayer = QtMultimedia.QMediaPlayer()
@@ -91,7 +94,6 @@ class ExampleApp(QtWidgets.QMainWindow, design.Ui_MainWindow):
         fileName, _ = QtWidgets.QFileDialog.getOpenFileName(QFileDialog(), "Choose video", path, filter)
         #
         if fileName != '':
-                   self.mediaPlayer.setParent(None)
                    self.mediaPlayer.setMedia(QMediaContent(QUrl.fromLocalFile(fileName)))
                    self.mediaPlayer.setVideoOutput(self.Video_Player)
                    self.fullScreen.setEnabled(True)
@@ -107,35 +109,35 @@ class ExampleApp(QtWidgets.QMainWindow, design.Ui_MainWindow):
 
     #
     def play_video(self):
-
-
         self.mediaPlayer.play()
+        t.read = True
         self.thread.start()
         print("end")
 
     #
     def exitFullScreen(self):
         self.Video_Player.setFullScreen(False)
-        self.Video_Player.setParent(None)
-        self.initial()
-
 
     #
     def full_screen(self):
        self.Video_Player.setFullScreen(True)
-
-
+       self.Video_Player.flag = False
 
     #
     def mediaStateChanged(self, state):
         if state == QMediaPlayer.StoppedState:
             t.read = False
             self.exitFullScreen()
+            self.Video_Player.setParent(None)
+            self.initial()
+
 
     def setPosition(self, position):
         self.mediaPlayer.setPosition(position)
     def positionChanged(self, position):
         self.positionSlider.setValue(position)
+        if self.Video_Player.flag == True:
+            self.exitFullScreen()
     def durationChanged(self, duration):
         self.positionSlider.setRange(0, duration)
     #
@@ -223,6 +225,18 @@ class ThreadForRead(QThread):
         pred = md.predict(dataFeature)
         path = f"./save/prediction/{self.lineEdit.text()}.eegpic"
         write(pred, path)
+
+class QVideoWidgetExit(QVideoWidget):
+    def __init__(self, qwidget):
+        super().__init__()
+        self.Video_Player = qwidget
+        self.flag = False
+
+
+    def keyPressEvent(self, event):
+        if event.key() == QKeySequence("Esc"):
+            self.flag = True
+
 
 def main(): 
     app = QtWidgets.QApplication(sys.argv)  #

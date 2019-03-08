@@ -28,7 +28,7 @@ from multiprocessing import Process
 
 import design  # 
 
-t = eegSmtReader('/dev/ttyUSB0')
+t = eegSmtReader('/dev/tty.usbserial-AL027NKE')
 
 class ExampleApp(QtWidgets.QMainWindow, design.Ui_MainWindow):
     def __init__(self):
@@ -40,7 +40,6 @@ class ExampleApp(QtWidgets.QMainWindow, design.Ui_MainWindow):
         #
         self.fullScreen.setEnabled(False)
         self.playBtn.setEnabled(False)
-        self.createGraph.setEnabled(False)
 
         #
         self.positionSlider = QSlider(Qt.Horizontal)
@@ -53,11 +52,13 @@ class ExampleApp(QtWidgets.QMainWindow, design.Ui_MainWindow):
         self.shortcut = QShortcut(QKeySequence("q"), self)
         self.shortcut.activated.connect(self.exitFullScreen)
 
-
+        #
+        self.createGraph.clicked.connect(self.read_data)
 
         #
         self.paintGrph = QVBoxLayout(self.plot_widget)
 
+        #
         self.initial()
 
         #
@@ -72,7 +73,6 @@ class ExampleApp(QtWidgets.QMainWindow, design.Ui_MainWindow):
         self.horizontalLayout_3.addWidget(self.Video_Player)
         self.Video_Player.show()
         self.mediaPlayer = QtMultimedia.QMediaPlayer()
-        self.thread = ThreadForRead(self.mediaPlayer)
         self.mediaPlayer.stateChanged.connect(self.mediaStateChanged)
         self.mediaPlayer.positionChanged.connect(self.positionChanged)
         self.mediaPlayer.durationChanged.connect(self.durationChanged)
@@ -84,7 +84,11 @@ class ExampleApp(QtWidgets.QMainWindow, design.Ui_MainWindow):
         #
         for i in reversed(range(self.paintGrph.count())):
             self.paintGrph.itemAt(i).widget().setParent(None)
-        fileName, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Choose video")
+        filter = "mp4(*.mp4)"
+
+
+        path = "./"
+        fileName, _ = QtWidgets.QFileDialog.getOpenFileName(QFileDialog(), "Choose video", path, filter)
         #
         if fileName != '':
                    self.mediaPlayer.setParent(None)
@@ -93,10 +97,11 @@ class ExampleApp(QtWidgets.QMainWindow, design.Ui_MainWindow):
                    self.fullScreen.setEnabled(True)
                    self.playBtn.setEnabled(True)
                    self.lineEdit.clear()
+                   self.thread = ThreadForRead(self.mediaPlayer, self.lineEdit)
                    self.lineEdit.setText(os.path.basename(fileName))
                    self.playBtn.clicked.connect(self.play_video)
         self.fullScreen.clicked.connect(self.full_screen)
-        self.createGraph.clicked.connect(self.read_data)
+
 
 
 
@@ -107,24 +112,6 @@ class ExampleApp(QtWidgets.QMainWindow, design.Ui_MainWindow):
         self.mediaPlayer.play()
         self.thread.start()
         print("end")
-
-
-
-    def workWithData(self):
-        #t = eegSmtReader('/dev/ttyUSB0')
-        print("start read...")
-        data = t.read_data(100000)
-        time.sleep(0)
-        print("end read...")
-        dataFeature = fexec.get_fuature(data)
-        path = "/Users/antonsavacenko/untitled/test.eegpic"
-        self.write(dataFeature, path)
-
-        md = model.get_model()
-        pred = md.predict(dataFeature)
-        path = "/Users/antonsavacenko/untitled/testRes.eegpic"
-        self.write(pred, path)
-
 
     #
     def exitFullScreen(self):
@@ -144,7 +131,6 @@ class ExampleApp(QtWidgets.QMainWindow, design.Ui_MainWindow):
         if state == QMediaPlayer.StoppedState:
             t.read = False
             self.exitFullScreen()
-            self.createGraph.setEnabled(True)
 
     def setPosition(self, position):
         self.mediaPlayer.setPosition(position)
@@ -156,7 +142,13 @@ class ExampleApp(QtWidgets.QMainWindow, design.Ui_MainWindow):
 
     #
     def read_data(self):
-        fileName, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Choose file")
+        filter = "eegpic(*.eegpic)"
+
+        if "save" in os.listdir("./"):
+            path = "./save/"
+        else:
+            path = "./"
+        fileName, _ = QtWidgets.QFileDialog.getOpenFileName(QFileDialog(), "Choose file", path, filter)
         #
         if fileName != '':
             path_to_data = fileName
@@ -187,6 +179,7 @@ class ExampleApp(QtWidgets.QMainWindow, design.Ui_MainWindow):
         self.toolbar = NavigationToolbar(self.canavas, self)
         self.paintGrph.addWidget(self.toolbar)
 
+
     #
     def oK_click(self):
         self.lineEdit.setReadOnly(True)
@@ -196,25 +189,39 @@ def write(data, path):
         pickle.dump(data, f)
 
 class ThreadForRead(QThread):
-    def __init__(self, mediaPlayer):
+    def __init__(self, mediaPlayer, lineEdit):
         super().__init__()
         self.mediaPlayer = mediaPlayer
+        self.lineEdit = lineEdit
 
 
     def run(self):
         print("start read...")
         data = t.read_data()
         time.sleep(0)
-        with open("/Users/antonsavacenko/untitled/data_test.eegpic", 'wb') as f:
+
+
+        if "save" not in os.listdir("."):
+            os.mkdir("./save")
+
+        if "data" not in os.listdir("./save"):
+            os.mkdir("./save/data")
+        if "prediction" not in os.listdir("./save"):
+            os.mkdir("./save/prediction")
+        if "feature" not in os.listdir("./save"):
+            os.mkdir("./save/feature")
+
+
+        with open(f"./save/data/{self.lineEdit.text()}.eegpic", 'wb') as f:
             pickle.dump(data, f)
         print("end read...")
-        dataFeature = fexec.get_fuature(data)
-        path = "/Users/antonsavacenko/untitled/test.eegpic"
+        dataFeature = fexec.get_feature(data) + np.random.randint(50) / 100 * ((-1)^np.random.randint(2))
+        path = f"./save/feature/{self.lineEdit.text()}.eegpic"
         write(dataFeature, path)
 
         md = model.get_model()
         pred = md.predict(dataFeature)
-        path = "/Users/antonsavacenko/untitled/testRes.eegpic"
+        path = f"./save/prediction/{self.lineEdit.text()}.eegpic"
         write(pred, path)
 
 def main(): 

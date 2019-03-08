@@ -21,7 +21,7 @@ def create_table( len_window = 100, len_min = 100):
     return df
 
 
-def get_feature(data, len_window = 100, len_min = 100):
+def get_feature(data, len_window = 50, len_min = 50):
     data_res = data
 
     df = create_table(len_window=len_window, len_min=len_min)

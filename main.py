@@ -1,4 +1,4 @@
-import sys  # 
+import sys  #
 import os  # 
 import pickle
 import matplotlib.pyplot as plt
@@ -217,7 +217,8 @@ class ThreadForRead(QThread):
         with open(f"./save/data/{self.lineEdit.text()}.eegpic", 'wb') as f:
             pickle.dump(data, f)
         print("end read...")
-        dataFeature = fexec.get_feature(data) + np.random.randint(50) / 100 * ((-1)^np.random.randint(2))
+        dataFeature = fexec.feature(data)
+        print(dataFeature.shape)
         path = f"./save/feature/{self.lineEdit.text()}.eegpic"
         write(dataFeature, path)
 
@@ -225,6 +226,7 @@ class ThreadForRead(QThread):
         pred = md.predict(dataFeature)
         path = f"./save/prediction/{self.lineEdit.text()}.eegpic"
         write(pred, path)
+        print("predict")
 
 class QVideoWidgetExit(QVideoWidget):
     def __init__(self, qwidget):
@@ -237,6 +239,13 @@ class QVideoWidgetExit(QVideoWidget):
         if event.key() == QKeySequence("Esc"):
             self.flag = True
 
+class MyModel:
+    def __init__(self, model, alpha):
+        self.model = model
+        self.alpha = alpha
+
+    def predict(self, X):
+        return (self.model.predict_proba(X)[:, 1] > self.alpha).astype(int)
 
 def main(): 
     app = QtWidgets.QApplication(sys.argv)  #

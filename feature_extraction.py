@@ -4,32 +4,34 @@ from numpy import array, log1p, arange, abs as np_abs
 from numpy.fft import rfft, rfftfreq, irfft
 from numpy.random import uniform
 
-def create_table( len_window = 100, len_min = 100):
-    df = pd.DataFrame()
-
-    for i in range(len_min):
-        cur_str = "a" + str(i)
-        tmp = pd.DataFrame(columns=[cur_str])
-        df = df.join(tmp)
-
-    for i in range(len_min):
-        cur_str = "b" + str(i)
-        tmp = pd.DataFrame(columns=[cur_str])
-        df = df.join(tmp)
-    df = df.join(pd.DataFrame(columns=['is_image', 'name']))
-
+def create_table():
+    df = pd.DataFrame(columns=['range', 'a', 'b','is_image', 'name'])
     return df
 
 
-def get_feature(data, len_window = 50, len_min = 50):
+def get_feature(data, len_window = 100, step = 50):
     data_res = data
 
-    df = create_table(len_window=len_window, len_min=len_min)
-    df = createDF(data_res, True,  "to_pred", df=df, len_window=len_window, len_min=len_min)
-
+    df = create_table()
+    df = createDF(data_res, True,  "to_pred", df=df, len_window=len_window, step=step)
     df.drop(columns=["name", "is_image"], inplace=True)
-    print(df.shape)
-    return df.values
+    #print(df.shape)
+    return df
+
+def feature(data):
+    np_df_first = []
+    np_df_second = []
+
+    np_df_first.append(get_feature(data[0]))
+    np_df_second.append(get_feature(data[1]))
+
+    np_df_first_conc = pd.concat(np_df_first)
+    np_df_second_conc = pd.concat(np_df_second)
+
+    df = pd.concat((np_df_first_conc, np_df_second_conc), axis=1)
+
+    print(df[['a', 'b']])
+    return df[['a', 'b']].values
 
 def getFeatures(data):
     res = rfft(data)
@@ -40,10 +42,10 @@ def getFeatures(data):
     chastota = rfftfreq(N, 1./FD)
     alpha = amp[(chastota >= 8) & (chastota < 12)]
     #plt.plot(alpha)
-    
+
     betta = amp[(chastota >= 12) & (chastota < 30)]
     #plt.plot(betta)
-    
+
     #alpha_HZ = irfft(alpha)
     #plt.plot(alpha_HZ)
     #betta_HZ = irfft(betta)
@@ -51,41 +53,18 @@ def getFeatures(data):
     #print(alpha)
     return alpha.mean() if len(alpha) > 0 else 0, betta.mean() if len(betta) > 0 else 0
 
-# def createDF(data, is_image, name, len_window = 100, len_min = 100, df = None):
+def createDF(data, is_image, name, len_window = 100, step = 50, df = None):
 
-#     for i in range(0, len(data), len_window):
-#         alpha_arr = []
-#         betta_arr = []
-#         for j in range(i, i + len_window):
-#             cur_alpha_mean, cur_betta_mean = getFeatures(data[j:min(len(data), j + len_min)])
-#             #alpha_arr = np.append(alpha_arr, str(cur_alpha_mean))
-#             #alpha_arr = np.append(alpha_arr, str(cur_alpha_mean))
-#             alpha_arr.append(cur_alpha_mean)
-#             betta_arr.append(cur_betta_mean)
-#         new_str = alpha_arr + betta_arr
-#         new_str.append(is_image)
-#         new_str.append(name)
-#         df.loc[len(df)] = new_str
-
-#     df = df.fillna(0)
-#     return df
-
-def createDF(data, is_image, name, len_window = 100, len_min = 100, df = None):
-   
-    for i in range(0, len(data) - len_min, len_min):
-        alpha_arr = []
-        betta_arr = []
-        for j in range(i, i + len_window):
-            cur_alpha_mean, cur_betta_mean = getFeatures(data[j:min(len(data), j + len_min)])
-            #alpha_arr = np.append(alpha_arr, str(cur_alpha_mean))
-            #alpha_arr = np.append(alpha_arr, str(cur_alpha_mean))
-            alpha_arr.append(cur_alpha_mean)
-            betta_arr.append(cur_betta_mean)
-        new_str = alpha_arr + betta_arr
+    for i in range(0, len(data) - len_window, step):
+        alpha_mean, betta_mean = getFeatures(data[i:min(len(data), i + len_window)])
+        new_str = [str(i) + "-" + str(i + len_window)]
+        new_str.append(alpha_mean)
+        new_str.append(betta_mean)
         new_str.append(is_image)
         new_str.append(name)
-        print(len(new_str), df.shape)
+        #print(len(new_str), df.shape)
         df.loc[len(df)] = new_str
 
     df = df.fillna(0)
     return df
+

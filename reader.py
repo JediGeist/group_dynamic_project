@@ -64,6 +64,6 @@ class eegSmtReader:
         
         np_res_arr = np.array(res_arr)
         
-        return (np_res_arr[0] + np_res_arr[1]) / 1023
+        return np_res_arr / 1023
 
 

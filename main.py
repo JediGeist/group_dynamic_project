@@ -217,7 +217,7 @@ class ThreadForRead(QThread):
         with open(f"./save/data/{self.lineEdit.text()}.eegpic", 'wb') as f:
             pickle.dump(data, f)
         print("end read...")
-        dataFeature = fexec.feature(data)
+        dataFeature = fexec.createFeatures(data)
         print(dataFeature.shape)
         path = f"./save/feature/{self.lineEdit.text()}.eegpic"
         write(dataFeature, path)

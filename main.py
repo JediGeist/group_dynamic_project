@@ -20,7 +20,7 @@ from PyQt5.QtGui import QIcon, QKeySequence
 from mplForWidget import MyMplCanvas
 from matplotlib.backends.backend_qt4 import NavigationToolbar2QT as NavigationToolbar
 from reader import eegSmtReader
-import feature_extraction as fexec
+from feature_extraction import featureExtractor
 import model
 import time
 from multiprocessing import Process
@@ -217,7 +217,9 @@ class ThreadForRead(QThread):
         with open(f"./save/data/{self.lineEdit.text()}.eegpic", 'wb') as f:
             pickle.dump(data, f)
         print("end read...")
-        dataFeature = fexec.createFeatures(data)
+
+        extractor = featureExtractor()
+        dataFeature = extractor.createFeatures(data)
         print(dataFeature.shape)
         path = f"./save/feature/{self.lineEdit.text()}.eegpic"
         write(dataFeature, path)

@@ -4,63 +4,58 @@ from numpy import array, log1p, arange, abs as np_abs
 from numpy.fft import rfft, rfftfreq, irfft
 from numpy.random import uniform
 
-def getFeaturesFromData(data, len_window = 100, step = 50):
-    data_res = data
+class featureExtractor:
+    def __init__(self):
+        
 
-    df = createDF(data_res, True,  "to_pred", len_window=len_window, step=step)
-    df.drop(columns=["name", "is_image"], inplace=True)
-    #print(df.shape)
-    return df
+    def getFeaturesFromData(data, len_window = 100, step = 50):
+        data_res = data
 
-def createFeatures(data):
-    np_df_first = []
-    np_df_second = []
+        df = createDF(data_res, True,  "to_pred", len_window=len_window, step=step)
+        df.drop(columns=["name", "is_image"], inplace=True)
+        return df
 
-    np_df_first.append(getFeaturesFromData(data[0]))
-    np_df_second.append(getFeaturesFromData(data[1]))
+    def createFeatures(data):
+        np_df_first = []
+        np_df_second = []
 
-    np_df_first_conc = pd.concat(np_df_first)
-    np_df_second_conc = pd.concat(np_df_second)
+        np_df_first.append(getFeaturesFromData(data[0]))
+        np_df_second.append(getFeaturesFromData(data[1]))
 
-    df = pd.concat((np_df_first_conc, np_df_second_conc), axis=1)
+        np_df_first_conc = pd.concat(np_df_first)
+        np_df_second_conc = pd.concat(np_df_second)
 
-    print(df[['a', 'b']])
-    return df[['a', 'b']].values
+        df = pd.concat((np_df_first_conc, np_df_second_conc), axis=1)
 
-def getAlphaAndBettaMean(data):
-    res = rfft(data)
-    FD = 256
-    N = data.shape[0]
-    #plt.plot(rfftfreq(N, 1./FD), np_abs(res)/N)
-    amp = np_abs(res)/N
-    chastota = rfftfreq(N, 1./FD)
-    alpha = amp[(chastota >= 8) & (chastota < 12)]
-    #plt.plot(alpha)
+        print(df[['a', 'b']])
+        return df[['a', 'b']].values
 
-    betta = amp[(chastota >= 12) & (chastota < 30)]
-    #plt.plot(betta)
+    def getAlphaAndBettaMean(data):
+        res = rfft(data)
+        FD = 256
+        N = data.shape[0]
+        
+        amp = np_abs(res)/N
+        chastota = rfftfreq(N, 1./FD)
+        alpha = amp[(chastota >= 8) & (chastota < 12)]
 
-    #alpha_HZ = irfft(alpha)
-    #plt.plot(alpha_HZ)
-    #betta_HZ = irfft(betta)
-    #plt.plot(betta_HZ)
-    #print(alpha)
-    return alpha.mean() if len(alpha) > 0 else 0, betta.mean() if len(betta) > 0 else 0
+        betta = amp[(chastota >= 12) & (chastota < 30)]
 
-def createDF(data, is_image, name, len_window = 100, step = 50, df = None):
-    if df == None:
-        df = pd.DataFrame(columns=['range', 'a', 'b','is_image', 'name'])
+        return alpha.mean() if len(alpha) > 0 else 0, betta.mean() if len(betta) > 0 else 0
 
-    for i in range(0, len(data) - len_window, step):
-        alpha_mean, betta_mean = getAlphaAndBettaMean(data[i:min(len(data), i + len_window)])
-        new_str = [str(i) + "-" + str(i + len_window)]
-        new_str.append(alpha_mean)
-        new_str.append(betta_mean)
-        new_str.append(is_image)
-        new_str.append(name)
-        #print(len(new_str), df.shape)
-        df.loc[len(df)] = new_str
+    def createDF(data, is_image, name, len_window = 100, step = 50, df = None):
+        if df == None:
+            df = pd.DataFrame(columns=['range', 'a', 'b','is_image', 'name'])
 
-    df = df.fillna(0)
-    return df
+        for i in range(0, len(data) - len_window, step):
+            alpha_mean, betta_mean = getAlphaAndBettaMean(data[i:min(len(data), i + len_window)])
+            new_str = [str(i) + "-" + str(i + len_window)]
+            new_str.append(alpha_mean)
+            new_str.append(betta_mean)
+            new_str.append(is_image)
+            new_str.append(name)
+            df.loc[len(df)] = new_str
+
+        df = df.fillna(0)
+        return df
 
